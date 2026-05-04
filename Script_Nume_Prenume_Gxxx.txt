@@ -1,0 +1,208 @@
+-- Creare Tabele
+
+-- 1. Sectii (Entitate Independenta)
+CREATE TABLE Sectii (
+    ID_Sectie NUMBER(4) PRIMARY KEY,
+    Nume_Sectie VARCHAR2(50) NOT NULL,
+    Etaj NUMBER(2)
+);
+
+-- 2. Cabinete (Entitate Dependenta de Sectii)
+CREATE TABLE Cabinete (
+    ID_Sectie NUMBER(4) NOT NULL,
+    Numar_Cabinet NUMBER(3) NOT NULL,
+    Descriere VARCHAR2(100),
+    CONSTRAINT PK_Cabinete PRIMARY KEY (ID_Sectie, Numar_Cabinet),
+    CONSTRAINT FK_Cabinete_Sectii FOREIGN KEY (ID_Sectie) REFERENCES Sectii(ID_Sectie) ON DELETE CASCADE
+);
+
+-- 3. Persoane (Super-type)
+CREATE TABLE Persoane (
+    CNP VARCHAR2(13) PRIMARY KEY,
+    Nume VARCHAR2(50) NOT NULL,
+    Prenume VARCHAR2(50) NOT NULL,
+    Telefon VARCHAR2(15),
+    Data_Nasterii DATE,
+    CONSTRAINT CHK_CNP_Length CHECK (LENGTH(CNP) = 13)
+);
+
+-- 4. Medici (Sub-type din Persoane)
+CREATE TABLE Medici (
+    CNP VARCHAR2(13) PRIMARY KEY,
+    Cod_Parafa VARCHAR2(10) UNIQUE NOT NULL,
+    Specializare VARCHAR2(50) NOT NULL,
+    ID_Sectie NUMBER(4),
+    Numar_Cabinet NUMBER(3),
+    CONSTRAINT FK_Medici_Persoane FOREIGN KEY (CNP) REFERENCES Persoane(CNP) ON DELETE CASCADE,
+    CONSTRAINT FK_Medici_Cabinete FOREIGN KEY (ID_Sectie, Numar_Cabinet) REFERENCES Cabinete(ID_Sectie, Numar_Cabinet)
+);
+
+-- 5. Asiguratori (Pentru relatie 1:N cu Pacienti)
+CREATE TABLE Asiguratori (
+    ID_Asigurator NUMBER(4) PRIMARY KEY,
+    Nume_Companie VARCHAR2(100) NOT NULL,
+    Telefon_Contact VARCHAR2(15)
+);
+
+-- 6. Pacienti (Sub-type din Persoane)
+CREATE TABLE Pacienti (
+    CNP VARCHAR2(13) PRIMARY KEY,
+    Grupa_Sanguina VARCHAR2(5),
+    Alergii VARCHAR2(255) DEFAULT 'Nu se cunosc',
+    ID_Asigurator NUMBER(4),
+    CONSTRAINT FK_Pacienti_Persoane FOREIGN KEY (CNP) REFERENCES Persoane(CNP) ON DELETE CASCADE,
+    CONSTRAINT FK_Pacienti_Asigurator FOREIGN KEY (ID_Asigurator) REFERENCES Asiguratori(ID_Asigurator)
+);
+
+-- 7. Dosare_Medicale (Relatie One-to-One cu Pacienti)
+CREATE TABLE Dosare_Medicale (
+    ID_Dosar NUMBER(6) PRIMARY KEY,
+    CNP_Pacient VARCHAR2(13) UNIQUE NOT NULL,
+    Data_Deschidere DATE DEFAULT SYSDATE,
+    Istoric_General VARCHAR2(1000),
+    CONSTRAINT FK_Dosare_Pacienti FOREIGN KEY (CNP_Pacient) REFERENCES Pacienti(CNP) ON DELETE CASCADE
+);
+
+-- 8. Servicii_Medicale
+CREATE TABLE Servicii_Medicale (
+    ID_Serviciu NUMBER(4) PRIMARY KEY,
+    Denumire_Serviciu VARCHAR2(100) NOT NULL,
+    Pret NUMBER(6, 2) CHECK (Pret >= 0),
+    Durata_Minute NUMBER(3) CHECK (Durata_Minute > 0)
+);
+
+-- 9. Programari (Relație Ternară - Ordin 3: Medic, Pacient, Serviciu)
+CREATE TABLE Programari (
+    ID_Programare NUMBER(8) PRIMARY KEY,
+    CNP_Medic VARCHAR2(13) NOT NULL,
+    CNP_Pacient VARCHAR2(13) NOT NULL,
+    ID_Serviciu NUMBER(4) NOT NULL,
+    Data_Ora TIMESTAMP NOT NULL,
+    Status VARCHAR2(20) DEFAULT 'Programat' CHECK (Status IN ('Programat', 'Finalizat', 'Anulat')),
+    CONSTRAINT FK_Prog_Medici FOREIGN KEY (CNP_Medic) REFERENCES Medici(CNP),
+    CONSTRAINT FK_Prog_Pacienti FOREIGN KEY (CNP_Pacient) REFERENCES Pacienti(CNP),
+    CONSTRAINT FK_Prog_Servicii FOREIGN KEY (ID_Serviciu) REFERENCES Servicii_Medicale(ID_Serviciu),
+    CONSTRAINT UQ_Programare_Medic UNIQUE (CNP_Medic, Data_Ora)
+);
+
+-- 10. Retete (Relatie 1:N de la Medic la Pacient)
+CREATE TABLE Retete (
+    ID_Reteta NUMBER(6) PRIMARY KEY,
+    CNP_Medic VARCHAR2(13) NOT NULL,
+    CNP_Pacient VARCHAR2(13) NOT NULL,
+    Data_Eliberare DATE DEFAULT SYSDATE,
+    Valabilitate_Zile NUMBER(3) DEFAULT 30,
+    CONSTRAINT FK_Retete_Medici FOREIGN KEY (CNP_Medic) REFERENCES Medici(CNP),
+    CONSTRAINT FK_Retete_Pacienti FOREIGN KEY (CNP_Pacient) REFERENCES Pacienti(CNP)
+);
+
+-- 11. Medicamente
+CREATE TABLE Medicamente (
+    ID_Medicament NUMBER(6) PRIMARY KEY,
+    Denumire VARCHAR2(100) NOT NULL,
+    Substanta_Activa VARCHAR2(100),
+    Pret_Unitar NUMBER(6, 2) CHECK (Pret_Unitar > 0)
+);
+
+-- 12. Detalii_Reteta (Tabel Asociativ pentru M:N intre Retete si Medicamente)
+CREATE TABLE Detalii_Reteta (
+    ID_Reteta NUMBER(6) NOT NULL,
+    ID_Medicament NUMBER(6) NOT NULL,
+    Cantitate NUMBER(3) CHECK (Cantitate > 0),
+    Dozaj VARCHAR2(50),
+    CONSTRAINT PK_Detalii_Reteta PRIMARY KEY (ID_Reteta, ID_Medicament),
+    CONSTRAINT FK_Detalii_Reteta FOREIGN KEY (ID_Reteta) REFERENCES Retete(ID_Reteta) ON DELETE CASCADE,
+    CONSTRAINT FK_Detalii_Medicament FOREIGN KEY (ID_Medicament) REFERENCES Medicamente(ID_Medicament)
+);
+
+-- Inserare Date (minim 5 pe tabel)
+
+-- 1. Sectii
+INSERT INTO Sectii VALUES (10, 'Cardiologie', 1);
+INSERT INTO Sectii VALUES (20, 'Pediatrie', 2);
+INSERT INTO Sectii VALUES (30, 'Neurologie', 3);
+INSERT INTO Sectii VALUES (40, 'Dermatologie', 1);
+INSERT INTO Sectii VALUES (50, 'Ortopedie', 2);
+
+-- 2. Cabinete
+INSERT INTO Cabinete VALUES (10, 101, 'Cabinet Consultatii Cardio 1');
+INSERT INTO Cabinete VALUES (10, 102, 'Cabinet EKG');
+INSERT INTO Cabinete VALUES (20, 201, 'Cabinet Consultatii Pediatrie');
+INSERT INTO Cabinete VALUES (30, 301, 'Cabinet Neuro 1');
+INSERT INTO Cabinete VALUES (50, 501, 'Sala Gips');
+
+-- 3. Persoane
+INSERT INTO Persoane VALUES ('1800101123456', 'Popescu', 'Ion', '0722111111', TO_DATE('1980-01-01', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('2850202123456', 'Ionescu', 'Maria', '0722222222', TO_DATE('1985-02-02', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('1900303123456', 'Radu', 'Andrei', '0722333333', TO_DATE('1990-03-03', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('2950404123456', 'Marin', 'Elena', '0722444444', TO_DATE('1995-04-04', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('1700505123456', 'Dumitru', 'Vasile', '0722555555', TO_DATE('1970-05-05', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('2880606123456', 'Stan', 'Ioana', '0722666666', TO_DATE('1988-06-06', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('1920707123456', 'Gheorghe', 'Mihai', '0722777777', TO_DATE('1992-07-07', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('2800808123456', 'Vasile', 'Ana', '0722888888', TO_DATE('1980-08-08', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('1990909123456', 'Constantin', 'Paul', '0722999999', TO_DATE('1999-09-09', 'YYYY-MM-DD'));
+INSERT INTO Persoane VALUES ('2911010123456', 'Stoica', 'Andreea', '0722000000', TO_DATE('1991-10-10', 'YYYY-MM-DD'));
+
+-- 4. Medici (din Persoane)
+INSERT INTO Medici VALUES ('1800101123456', 'P12345', 'Cardiolog', 10, 101);
+INSERT INTO Medici VALUES ('2850202123456', 'P23456', 'Pediatru', 20, 201);
+INSERT INTO Medici VALUES ('1900303123456', 'P34567', 'Neurolog', 30, 301);
+INSERT INTO Medici VALUES ('2950404123456', 'P45678', 'Dermatolog', 40, NULL);
+INSERT INTO Medici VALUES ('1700505123456', 'P56789', 'Ortoped', 50, 501);
+
+-- 5. Asiguratori
+INSERT INTO Asiguratori VALUES (1, 'Allianz Tiriac', '0211111111');
+INSERT INTO Asiguratori VALUES (2, 'Omniasig', '0212222222');
+INSERT INTO Asiguratori VALUES (3, 'Groupama', '0213333333');
+INSERT INTO Asiguratori VALUES (4, 'Generali', '0214444444');
+INSERT INTO Asiguratori VALUES (5, 'NN Asigurari', '0215555555');
+
+-- 6. Pacienti (din Persoane)
+INSERT INTO Pacienti VALUES ('2880606123456', '0I', 'Arahide', 1);
+INSERT INTO Pacienti VALUES ('1920707123456', 'AII', 'Penicilina', 2);
+INSERT INTO Pacienti VALUES ('2800808123456', 'BIII', 'Nu se cunosc', 1);
+INSERT INTO Pacienti VALUES ('1990909123456', 'ABIV', 'Praf', 3);
+INSERT INTO Pacienti VALUES ('2911010123456', '0I', 'Nu se cunosc', 4);
+
+-- 7. Dosare_Medicale
+INSERT INTO Dosare_Medicale VALUES (1001, '2880606123456', TO_DATE('2023-01-15', 'YYYY-MM-DD'), 'Pacient cu istoric de hipertensiune.');
+INSERT INTO Dosare_Medicale VALUES (1002, '1920707123456', TO_DATE('2023-02-20', 'YYYY-MM-DD'), 'Fara antecedente majore.');
+INSERT INTO Dosare_Medicale VALUES (1003, '2800808123456', TO_DATE('2023-03-10', 'YYYY-MM-DD'), 'Pacient diabetic tip 2.');
+INSERT INTO Dosare_Medicale VALUES (1004, '1990909123456', TO_DATE('2023-04-05', 'YYYY-MM-DD'), 'Astm bronsic.');
+INSERT INTO Dosare_Medicale VALUES (1005, '2911010123456', TO_DATE('2023-05-12', 'YYYY-MM-DD'), 'Consult de rutina.');
+
+-- 8. Servicii_Medicale
+INSERT INTO Servicii_Medicale VALUES (101, 'Consultatie Initiala', 200.00, 30);
+INSERT INTO Servicii_Medicale VALUES (102, 'Consultatie Control', 100.00, 15);
+INSERT INTO Servicii_Medicale VALUES (103, 'EKG', 150.00, 20);
+INSERT INTO Servicii_Medicale VALUES (104, 'Ecografie Abdominala', 250.00, 30);
+INSERT INTO Servicii_Medicale VALUES (105, 'Aplicare Gips', 300.00, 45);
+
+-- 9. Programari
+INSERT INTO Programari VALUES (1, '1800101123456', '2880606123456', 101, TO_TIMESTAMP('2023-10-01 10:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'Finalizat');
+INSERT INTO Programari VALUES (2, '2850202123456', '1920707123456', 101, TO_TIMESTAMP('2023-10-02 11:30:00', 'YYYY-MM-DD HH24:MI:SS'), 'Finalizat');
+INSERT INTO Programari VALUES (3, '1800101123456', '2800808123456', 103, TO_TIMESTAMP('2023-10-03 09:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'Finalizat');
+INSERT INTO Programari VALUES (4, '1700505123456', '1990909123456', 105, TO_TIMESTAMP('2023-10-04 14:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'Programat');
+INSERT INTO Programari VALUES (5, '1900303123456', '2911010123456', 101, TO_TIMESTAMP('2023-10-05 16:00:00', 'YYYY-MM-DD HH24:MI:SS'), 'Anulat');
+
+-- 10. Retete
+INSERT INTO Retete VALUES (501, '1800101123456', '2880606123456', TO_DATE('2023-10-01', 'YYYY-MM-DD'), 30);
+INSERT INTO Retete VALUES (502, '2850202123456', '1920707123456', TO_DATE('2023-10-02', 'YYYY-MM-DD'), 30);
+INSERT INTO Retete VALUES (503, '1800101123456', '2800808123456', TO_DATE('2023-10-03', 'YYYY-MM-DD'), 60);
+INSERT INTO Retete VALUES (504, '1700505123456', '1990909123456', TO_DATE('2023-10-04', 'YYYY-MM-DD'), 15);
+INSERT INTO Retete VALUES (505, '1900303123456', '2911010123456', TO_DATE('2023-10-05', 'YYYY-MM-DD'), 30);
+
+-- 11. Medicamente
+INSERT INTO Medicamente VALUES (801, 'Aspirina', 'Acid Acetilsalicilic', 15.50);
+INSERT INTO Medicamente VALUES (802, 'Paracetamol', 'Paracetamol', 10.00);
+INSERT INTO Medicamente VALUES (803, 'Nurofen', 'Ibuprofen', 25.00);
+INSERT INTO Medicamente VALUES (804, 'Prestarium', 'Perindopril', 45.00);
+INSERT INTO Medicamente VALUES (805, 'Amoxicilina', 'Amoxicilina', 35.00);
+
+-- 12. Detalii_Reteta
+INSERT INTO Detalii_Reteta VALUES (501, 804, 1, '1/zi dimineata');
+INSERT INTO Detalii_Reteta VALUES (501, 801, 2, 'La nevoie');
+INSERT INTO Detalii_Reteta VALUES (502, 802, 1, 'Din 8 in 8 ore');
+INSERT INTO Detalii_Reteta VALUES (503, 804, 2, '1/zi dimineata');
+INSERT INTO Detalii_Reteta VALUES (504, 803, 1, 'Pentru durere');
+INSERT INTO Detalii_Reteta VALUES (505, 805, 1, 'La 12 ore, timp de 7 zile');

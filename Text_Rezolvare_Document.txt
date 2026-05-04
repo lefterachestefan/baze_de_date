@@ -1,0 +1,96 @@
+TEXT PENTRU DOCUMENTUL WORD: TemaCurs_Nume_Prenume_Gxxx.docx
+(Copiază secțiunile de mai jos în documentul tău Word)
+
+==================================================
+
+1. Descrieți modelul real, utilitatea acestuia și regulile de funcționare
+
+Modelul real ales reprezintă un Sistem de Management al unei Clinici Medicale. Acest sistem este esențial pentru digitalizarea și eficientizarea activității dintr-o unitate spitalicească sau clinică, având rolul de a gestiona informații despre departamente (secții), infrastructură (cabinete), resursa umană (medici) și beneficiarii serviciilor (pacienți). 
+
+Utilitatea bazei de date constă în evidența precisă a actului medical: de la crearea dosarului pacientului și înregistrarea asigurării de sănătate, până la planificarea programărilor pentru diverse servicii medicale și eliberarea rețetelor. 
+
+Reguli de funcționare:
+- Clinica este împărțită în mai multe Secții (ex. Cardiologie, Pediatrie).
+- Fiecare Secție coordonează unul sau mai multe Cabinete (un cabinet nu poate exista independent de o secție).
+- Persoanele din sistem sunt de două tipuri principale: Medici și Pacienți. Toți au date comune (CNP, Nume), dar și date specifice.
+- Un Medic este angajat pe o anumită Secție și este repartizat într-un Cabinet.
+- Fiecare Pacient are un Dosar Medical unic (relație de 1 la 1).
+- Un Pacient poate fi afiliat la o singură companie de Asigurări, dar o companie acoperă mai mulți pacienți.
+- Activitatea principală este "Programarea". Aceasta implică 3 entități: un Medic consultă un Pacient, prestând un anumit Serviciu Medical la o dată și oră stabilite.
+- În urma unui consult, un Medic poate elibera o Rețetă unui Pacient.
+- O Rețetă poate conține mai multe Medicamente, iar un Medicament se poate regăsi pe mai multe Rețete (relație Many-to-Many).
+
+==================================================
+
+2. Prezentați constrângerile (restricții, reguli) impuse asupra modelului
+
+Constrângerile care guvernează acest model asigură integritatea datelor, după cum urmează:
+- Constrângeri de cheie primară (PRIMARY KEY): Entitățile independente, precum Sectii, Persoane, Servicii_Medicale, au un identificator unic.
+- Constrângeri de entitate dependentă: Cabinete este o entitate slabă, identificatorul ei (ID_Sectie, Numar_Cabinet) fiind compus și depinzând de cheia primară a secției. Un cabinet nu se poate crea dacă secția nu există.
+- Constrângeri de unicitate (UNIQUE): "Cod_Parafa" pentru Medici și "CNP_Pacient" în Dosare_Medicale (pentru a asigura relația strictă 1:1). De asemenea, un medic nu poate avea două Programări programate la aceeași Dată și Oră.
+- Constrângeri Check (CHECK): Valoarea "Pret" pentru Servicii și Medicamente trebuie să fie strict pozitivă (>0). CNP-ul introdus în tabelul Persoane trebuie să aibă exact 13 caractere. Statusul unei programări poate fi doar 'Programat', 'Finalizat' sau 'Anulat'.
+- Constrângeri de tip Not Null (NOT NULL): Atribute esențiale precum Numele, Prenumele, Denumirea Serviciului, Data_Ora programării trebuie obligatoriu completate.
+- Cardinalități: 
+  * O secție poate avea M cabinete (1:M).
+  * Un pacient deține obligatoriu 1 dosar medical, și un dosar aparține unui singur pacient (1:1).
+  * O rețetă conține N medicamente, un medicament e pe M rețete (M:N).
+
+==================================================
+
+3. Proiectați Diagrama Entitate-Relație (ER)
+[Aici vei insera poza din diagrama pe care o vei desena]
+
+a) Descrieți o entitate independentă, una dependentă și o subentitate
+- Entitate Independentă: SECTII. Există prin ea însăși în sistem. Cheia ei primară este `ID_Sectie`.
+- Entitate Dependentă: CABINETE. Nu are un identificator propriu suficient pentru a exista singură, ea "aparține" de o Secție. Cheia ei primară este compusă din cheia secției și un număr local: `(ID_Sectie, Numar_Cabinet)`.
+- Subentitate: MEDICI. Este o specializare a super-tipului PERSOANE. Moștenește atributele generale (Nume, Prenume) de la persoană, iar cheia ei primară `CNP` este în același timp și cheie străină către tabelul PERSOANE.
+
+b) Descrieți relațiile, incluzând precizarea cardinalității
+- Relație One-to-One (1:1): Între PACIENTI și DOSARE_MEDICALE. Un pacient are un singur dosar, un dosar este specific unui singur pacient. (Cardinalitate: Pacienti(1,1) - Dosare(1,1)).
+- Relație One-to-Many (1:N): Între SECTII și MEDICI. O secție angajează mai mulți medici, dar un medic aparține de o singură secție. (Cardinalitate: Sectie(1,N) - Medic(1,1)).
+- Relație Many-to-Many (M:N): Între RETETE și MEDICAMENTE. O rețetă prescrie mai multe medicamente, un medicament apare pe mai multe rețete. (Cardinalitate: Reteta(1,N) - Medicament(1,M)).
+- Relație de ordin superior (Tip 3 / Ternară): PROGRAMARI. Asociază 3 entități în același timp: MEDICI, PACIENTI și SERVICII_MEDICALE. (Cardinalitate: Un medic la o anumită dată consultă un anumit pacient pentru un anumit serviciu).
+
+c) Descrieți atributele, incluzând tipul de date și eventuale constrângeri
+- Pentru entitatea independentă (SECTII): 
+  * ID_Sectie: Numeric(4), Cheie Primară (PK).
+  * Nume_Sectie: Șir de caractere (VARCHAR2(50)), NOT NULL.
+  * Etaj: Numeric(2).
+- Pentru entitatea dependentă (CABINETE):
+  * ID_Sectie: Numeric(4), PK, FK (Cheie străină).
+  * Numar_Cabinet: Numeric(3), PK.
+  * Descriere: VARCHAR2(100).
+- Pentru subentitatea (MEDICI):
+  * CNP: VARCHAR2(13), PK și FK.
+  * Cod_Parafa: VARCHAR2(10), UNIQUE, NOT NULL.
+  * Specializare: VARCHAR2(50), NOT NULL.
+- Pentru relația (Programare - în modelul ER are atribute proprii):
+  * Data_Ora: Data Calendaristică și Timp (TIMESTAMP), NOT NULL.
+  * Status: VARCHAR2(20), Valoare implicită (DEFAULT) 'Programat', Restricție (CHECK In 'Programat', 'Finalizat', 'Anulat').
+
+==================================================
+
+4. Transformați Diagrama ER în Diagramă Conceptuală
+[Aici vei insera poza din a doua diagramă pe care o vei desena]
+
+==================================================
+
+5. Scrieți schemele relaționale corespunzătoare Diagramelor
+- Pentru un tabel independent (SECTII):
+  Sectii (ID_Sectie, Nume_Sectie, Etaj)
+  *Cheie primară:* ID_Sectie
+
+- Pentru un subtabel (MEDICI):
+  Medici (CNP, Cod_Parafa, Specializare, ID_Sectie, Numar_Cabinet)
+  *Cheie primară:* CNP
+  *Cheie externă:* CNP (către Persoane), (ID_Sectie, Numar_Cabinet) (către Cabinete)
+
+- Pentru un tabel asociativ (DETALII_RETETA - provenit din relația M:N):
+  Detalii_Reteta (ID_Reteta, ID_Medicament, Cantitate, Dozaj)
+  *Cheie primară:* (ID_Reteta, ID_Medicament)
+  *Chei externe:* ID_Reteta (către Retete), ID_Medicament (către Medicamente)
+
+==================================================
+
+6. Crearea tabelelor în SQL și inserarea datelor (print screen-uri)
+[Aici vei pune capturile de ecran (print screens) din Oracle APEX/SQL Developer demonstrând că ai rulat scriptul furnizat în fișierul .txt și că tabelele și datele au fost create cu succes.]

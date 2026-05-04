@@ -1,0 +1,34 @@
+Salut! 
+Am automatizat partea grea a proiectului tău: structura bazei de date, logica, constrângerile, scripturile de creare și inserare a datelor (SQL), precum și textul teoretic justificativ cerut în PDF.
+
+Iată CE MAI AI TU DE FĂCUT pentru a finaliza tema:
+
+PASUL 1: Redactarea Documentului Word (.docx)
+1. Deschide template-ul tău Word: `TemaCurs_Nume_Prenume_Gxxx.docx` (nu uita să-i schimbi numele cu datele tale).
+2. Deschide fișierul pe care ți l-am creat: `Text_Rezolvare_Document.txt`.
+3. Copiază textul din `Text_Rezolvare_Document.txt` și lipește-l în fișierul Word, exact la punctele corespunzătoare (1, 2, 3a, 3b, 3c, 5).
+
+PASUL 2: Desenarea Diagramelor
+Conform documentului PDF, trebuie să realizezi diagramele folosind "https://app.diagrams.net/" (Draw.io) - Blank Diagram.
+1. Intră pe site.
+2. Desenează Diagrama ER (Entitate-Relație):
+   - Pune entitățile dreptunghiuri, relațiile romburi.
+   - Folosește logica prezentată la punctul 1 și 3. (Ex: Secții -< Cabinete, Pacienți -- Dosare etc.)
+   - Adaugă atributele în elipse.
+   - Fă un print-screen cu diagrama și pune-o la Punctul 3 în documentul Word.
+3. Desenează Diagrama Conceptuală:
+   - Acesta este modelul relațional (tabele cu chei primare PK și externe FK legate prin săgeți crow's foot).
+   - Bazează-te pe tabelele din scriptul meu SQL.
+   - Fă un print-screen și pune-l la Punctul 4 în documentul Word.
+
+PASUL 3: Rularea codului SQL în Oracle (sau Oracle APEX)
+1. Deschide mediul tău de lucru Oracle.
+2. Deschide fișierul generat de mine: `Script_Nume_Prenume_Gxxx.txt` (nu uita să-l redenumești).
+3. Rulează tot codul (crearea celor 12 tabele și inserările).
+4. FĂ PRINT-SCREEN-URI (capturi de ecran) cu rezultatul execuției (să se vadă că s-au creat tabelele cu succes și că rândurile au fost inserate).
+5. Lipește aceste capturi de ecran la Punctul 6 din documentul Word.
+
+PASUL 4: Trimiterea
+Transformă fișierul `.docx` finalizat în `.pdf` și trimite-l conform instrucțiunilor alături de fișierul `Script_...txt`.
+
+Succes! Tema are un grad mare de complexitate și acoperă toate criteriile de punctaj maxim!
